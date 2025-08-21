@@ -582,7 +582,7 @@
                         body: message,
                         icon: 'https://cdn-icons-png.flaticon.com/512/411/411745.png',
                         tag: 'daily-task-reminder',
-                        requireInteraction: true  // 提示用户必须交互才能关闭
+                        requireInteraction: true
                     });
                     
                     notification.onclick = function() {
@@ -590,10 +590,10 @@
                         notification.close();
                     };
                     
-                    // 修改：将8秒改为30分钟（30 * 60 * 1000毫秒）
+                    // 30分钟后自动关闭通知
                     setTimeout(() => {
                         notification.close();
-                    }, 1800000);  // 30分钟 = 1800000毫秒
+                    }, 1800000);
                     
                     return notification;
                 } catch (error) {
@@ -627,7 +627,7 @@
                 playAlertSound();
             }
             
-            // 播放提示音
+            // 播放提示音 - 修改部分
             function playAlertSound() {
                 try {
                     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -637,12 +637,16 @@
                     oscillator.connect(gainNode);
                     gainNode.connect(audioContext.destination);
                     
+                    // 声音波形设置为方形波，听起来更尖锐明显
                     oscillator.type = 'sine';
-                    oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
-                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    // 设置频率为660Hz（中等偏高的音调）
+                    oscillator.frequency.setValueAtTime(660, audioContext.currentTime);
+                    // 音量调大到0.6（最大值为1.0）
+                    gainNode.gain.setValueAtTime(0.6, audioContext.currentTime);
                     
                     oscillator.start();
-                    oscillator.stop(audioContext.currentTime + 0.3);
+                    // 播放时长改为15秒（15.0秒）
+                    oscillator.stop(audioContext.currentTime + 15.0);
                 } catch (error) {
                     console.log('无法播放提示音:', error);
                 }
@@ -922,6 +926,4 @@
     </script>
 </body>
 </html>
-
-
-
+    
