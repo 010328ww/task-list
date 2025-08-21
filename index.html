@@ -627,26 +627,67 @@
                 playAlertSound();
             }
             
-            // 播放提示音 - 修改部分
+            // 播放悦耳的提醒铃声 - 修改部分
             function playAlertSound() {
                 try {
                     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                    const oscillator = audioContext.createOscillator();
                     const gainNode = audioContext.createGain();
-                    
-                    oscillator.connect(gainNode);
                     gainNode.connect(audioContext.destination);
                     
-                    // 声音波形设置为方形波，听起来更尖锐明显
-                    oscillator.type = 'sine';
-                    // 设置频率为660Hz（中等偏高的音调）
-                    oscillator.frequency.setValueAtTime(660, audioContext.currentTime);
-                    // 音量调大到0.6（最大值为1.0）
-                    gainNode.gain.setValueAtTime(0.6, audioContext.currentTime);
+                    // 设置适中的音量
+                    gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
                     
-                    oscillator.start();
-                    // 播放时长改为15秒（15.0秒）
-                    oscillator.stop(audioContext.currentTime + 15.0);
+                    // 定义一个和弦的音符频率（悦耳的C大调和弦）
+                    const notes = [
+                        { frequency: 523.25, duration: 0.5 },  // C5
+                        { frequency: 659.25, duration: 0.5 },  // E5
+                        { frequency: 783.99, duration: 0.5 },  // G5
+                        { frequency: 1046.50, duration: 1.0 }  // C6
+                    ];
+                    
+                    let currentTime = audioContext.currentTime;
+                    
+                    // 为每个音符创建一个振荡器
+                    notes.forEach(note => {
+                        const oscillator = audioContext.createOscillator();
+                        oscillator.type = 'sine';  // 正弦波更柔和悦耳
+                        oscillator.frequency.setValueAtTime(note.frequency, currentTime);
+                        oscillator.connect(gainNode);
+                        
+                        oscillator.start(currentTime);
+                        
+                        // 音量淡出效果，使声音结束更自然
+                        gainNode.gain.setValueAtTime(0.5, currentTime + note.duration - 0.1);
+                        gainNode.gain.linearRampToValueAtTime(0, currentTime + note.duration);
+                        
+                        oscillator.stop(currentTime + note.duration);
+                        
+                        currentTime += note.duration * 0.7;  // 音符之间有短暂间隔
+                    });
+                    
+                    // 总时长约3秒，循环播放5次达到15秒效果
+                    const totalDuration = currentTime - audioContext.currentTime;
+                    const loopCount = Math.ceil(15 / totalDuration);
+                    
+                    let loopTime = currentTime;
+                    for (let i = 1; i < loopCount; i++) {
+                        notes.forEach(note => {
+                            const oscillator = audioContext.createOscillator();
+                            oscillator.type = 'sine';
+                            oscillator.frequency.setValueAtTime(note.frequency, loopTime);
+                            oscillator.connect(gainNode);
+                            
+                            oscillator.start(loopTime);
+                            
+                            gainNode.gain.setValueAtTime(0.5, loopTime + note.duration - 0.1);
+                            gainNode.gain.linearRampToValueAtTime(0, loopTime + note.duration);
+                            
+                            oscillator.stop(loopTime + note.duration);
+                            
+                            loopTime += note.duration * 0.7;
+                        });
+                    }
+                    
                 } catch (error) {
                     console.log('无法播放提示音:', error);
                 }
